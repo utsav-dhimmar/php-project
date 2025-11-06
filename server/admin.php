@@ -82,15 +82,16 @@ if (isset($_POST['admin-login'])) {
             echo "<p style='color:red;'>$error</p>";
         }
     } else {
-        $q = "INSERT INTO competitions (title,description,date,time) 
+        $q = "INSERT INTO competitions (title,description,date,time)
               VALUES ('$title','$description','$date','$time')";
-        $result = mysqli_query($conn, $q);
+        // OOP way
+        $result = $conn->query($q);
 
         if ($result) {
             echo "Competition created successfully";
             redirect("../admin/view-competition.php");
         } else {
-            echo "Failed to insert records: " . mysqli_error($conn);
+            echo "Failed to insert records: " . $conn->error;
         }
     }
 } elseif (isset($_POST['admin-update-competition'])) {
@@ -127,18 +128,18 @@ if (isset($_POST['admin-login'])) {
             echo "<p style='color:red;'>$error</p>";
         }
     } else {
-        $q = "UPDATE competitions 
-              SET title = '$title', description = '$description', date = '$date', time = '$time' 
-              WHERE id = $id";
-        $result = mysqli_query($conn, $q);
+                $q = "UPDATE competitions
+                      SET title = '$title', description = '$description', date = '$date', time = '$time'
+                      WHERE id = $id";
+                // OOP way
+                $result = $conn->query($q);
 
-        if ($result) {
-            echo "Competition updated successfully";
-            redirect("../admin/view-competition.php");
-        } else {
-            echo "Failed to update records: " . mysqli_error($conn);
-        }
-    }
+                if ($result) {
+                    echo "Competition updated successfully";
+                    redirect("../admin/view-competition.php");
+                } else {
+                    echo "Failed to update records: " . $conn->error;
+                }    }
 } elseif (isset($_GET['logout'])) {
     unset($_SESSION['admin_email']);
     redirect("/college-competition-portal/index.php", 0);

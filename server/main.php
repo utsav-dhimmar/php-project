@@ -1,5 +1,5 @@
 <?php
-require("../config/db.php");
+
 require("../includes/functions.php");
 session_start();
 
@@ -61,35 +61,36 @@ if (isset($_POST['register'])) {
     } else {
 
         $check_user_query = "SELECT * FROM users WHERE email = '$email'";
-        $check_user_result = mysqli_query($conn, $check_user_query);
+        // OOP way
+        $check_user_result = $conn->query($check_user_query);
 
-        if (mysqli_num_rows($check_user_result) > 0) {
+        if ($check_user_result->num_rows > 0) {
             echo "<p style='color:red;'>User with this email already exists.</p>";
         } else {
 
-            $q = "INSERT INTO users (name,email,phone_no,password,gender) 
-                  VALUES ('$name','$email','$phone_no','$password','$gender')";
+                        $q = "INSERT INTO users (name,email,phone_no,password,gender)
+                              VALUES ('$name','$email','$phone_no','$password','$gender')";
+                        // OOP way
+                        $result = $conn->query($q);
 
-            $result = mysqli_query($conn, $q);
-
-            if ($result) {
-                echo "Register successfully. Redirecting to login page...";
-                redirect("../auth/login.php");
-            } else {
-                echo "<p style='color:red;'>Failed to insert records: " . mysqli_error($conn) . "</p>";
-                redirect("../auth/register.php");
-            }
-        }
+                        if ($result) {
+                            echo "Register successfully. Redirecting to login page...";
+                            redirect("../auth/login.php");
+                        } else {
+                            echo "<p style='color:red;'>Failed to insert records: " . $conn->error . "</p>";
+                            redirect("../auth/register.php");
+                        }        }
     }
 } else if (isset($_POST['login'])) {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
     $q = "SELECT * FROM users WHERE email = '$email' AND password = '$password'";
-    $result = mysqli_query($conn, $q);
+    // OOP way
+    $result = $conn->query($q);
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_array();
         $_SESSION['user_id'] = $row['id'];
         echo "Login successfully. Redirecting to competition page...";
         redirect("../users/competition.php");

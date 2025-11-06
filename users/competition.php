@@ -65,11 +65,11 @@ $q .= " ORDER BY date ASC";
 
   <?php
 
-  $result =  mysqli_query($conn, $q);
+  $result =  $conn->query($q);
 
   if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-      while ($row = mysqli_fetch_array($result)) {
+    if ($result->num_rows > 0) {
+      while ($row = $result->fetch_array()) {
 
         echo "<div class='card mb-4 text-dark'>
                     <div class='card-header font-weight-bold '>
@@ -98,7 +98,7 @@ $q .= " ORDER BY date ASC";
     }
   } else {
 
-    echo "<div class='alert alert-danger'>Failed to fetch records: " . mysqli_error($conn) . "</div>";
+    echo "<div class='alert alert-danger'>Failed to fetch records: " . $conn->error . "</div>";
   }
   ?>
 </div>

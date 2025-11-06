@@ -9,7 +9,7 @@ requireAdminLogin();
 
 <?php
 $q = "SELECT id, name, email, phone_no, gender, created_at FROM users ORDER BY id DESC";
-$result =  mysqli_query($conn, $q);
+$result =  $conn->query($q);
 
 if ($result) {
     echo '  <table class="table  table-hover">
@@ -24,8 +24,8 @@ if ($result) {
         </tr>
     </thead>
     <tbody>';
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = mysqli_fetch_array($result)) {
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_array()) {
             echo "<tr>
                             <td>" . htmlspecialchars($row['id']) . "</td>
                             <td>" . htmlspecialchars($row['name']) . "</td>
@@ -40,7 +40,7 @@ if ($result) {
         echo '<tr><td colspan="6" class="text-center">No users have registered yet.</td></tr>';
     }
 } else {
-    echo '<tr><td colspan="6" class="text-center text-danger">Failed to fetch records: ' . mysqli_error($conn) . '</td></tr>';
+    echo '<tr><td colspan="6" class="text-center text-danger">Failed to fetch records: ' . $conn->error . '</td></tr>';
 }
 ?>
 

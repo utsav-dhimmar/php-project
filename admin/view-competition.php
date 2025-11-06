@@ -10,11 +10,11 @@ requireAdminLogin();
   <h2 class="mb-4">Competitions</h2>
   <?php
   $q = "SELECT id, title, description,banner FROM competitions ORDER BY date DESC, time DESC";
-  $result =  mysqli_query($conn, $q);
+  $result =  $conn->query($q);
 
   if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-      while ($row = mysqli_fetch_array($result)) {
+    if ($result->num_rows > 0) {
+      while ($row = $result->fetch_array()) {
         echo "<div class='card mb-4'>
                     <div class='card-body'>
                         <h4 class='card-title'>" . htmlspecialchars($row['title']) . "</h4>
@@ -31,7 +31,7 @@ requireAdminLogin();
       echo "<div class='alert alert-info'>No competitions found , Click the Add New Competition button to add new competition.</div>";
     }
   } else {
-    echo "<div class='alert alert-danger'>Failed to fetch records: " . mysqli_error($conn) . "</div>";
+    echo "<div class='alert alert-danger'>Failed to fetch records: " . $conn->error . "</div>";
   }
   ?>
 

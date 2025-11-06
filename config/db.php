@@ -1,6 +1,6 @@
 <?php
-$conn = mysqli_connect("localhost","root","","college-competition-portal");
-if(!$conn){
-    die("Connection Failed ". mysqli_connect_error());
+$conn = new mysqli("localhost", "root", "", "college-competition-portal");
+if ($conn->connect_error) {
+    die("Connection Failed " . $conn->connect_error);
 }
 ?>

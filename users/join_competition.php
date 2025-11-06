@@ -11,9 +11,9 @@ if (!$competitionID) {
 $userID = (int)$_SESSION['user_id'];
 $competitionID = (int)$_GET['competitionID'];
 $check_sql = "SELECT id FROM registrations WHERE user_id = $userID AND competition_id = $competitionID";
-$check_result = mysqli_query($conn, $check_sql);
+$check_result = $conn->query($check_sql);
 
-if ($check_result && mysqli_num_rows($check_result) > 0) {
+if ($check_result && $check_result->num_rows > 0) {
     echo "You have already joined this competition.";
 
     redirect("/college-competition-portal/users/my-competition.php", 1);
@@ -21,7 +21,7 @@ if ($check_result && mysqli_num_rows($check_result) > 0) {
 }
 
 $q = "INSERT INTO registrations (user_id,competition_id ) VALUES (" . $userID . "," . $competitionID . " )";
-$result =  mysqli_query($conn, $q);
+$result =  $conn->query($q);
 
 
 if ($result) {
@@ -29,7 +29,7 @@ if ($result) {
     redirect("/college-competition-portal/users/my-competition.php");
     exit();
 } else {
-    echo "<div class='alert alert-danger'>Failed to fetch records: " . mysqli_error($conn) . "</div>";
+    echo "<div class='alert alert-danger'>Failed to fetch records: " . $conn->error . "</div>";
     exit();
 }
 ?>

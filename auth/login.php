@@ -1,8 +1,9 @@
 <?php
 include("../includes/header.php");
 require("../config/db.php");
+
 require("../includes/functions.php");
-if ($_SESSION['admin_email']) {
+if (isset($_SESSION['admin_email'])) {
   redirect("/college-competition-portal/admin/view-competition.php", 0);
 }
 if (isLoggedIn()) {
@@ -22,11 +23,12 @@ if (isset($_POST['login'])) {
   } else {
     $q = "SELECT * FROM users WHERE email = '$email' AND password = '$password'";
 
-    $result = mysqli_query($conn, $q);
+    // OOP way
+    $result = $conn->query($q);
 
-    if ($result && mysqli_num_rows($result) > 0) {
+    if ($result && $result->num_rows > 0) {
 
-      $row = mysqli_fetch_array($result);
+      $row = $result->fetch_array();
       $_SESSION['user_id'] = $row['id'];
       echo "Login successfully. Redirecting to competition page...";
       redirect("../users/competition.php");

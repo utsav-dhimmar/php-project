@@ -7,16 +7,16 @@ requireAdminLogin();
 
 function isTimeSlotAvailable($conn, $date, $time, $excludeCompetitionID = null)
 {
-    $date = mysqli_real_escape_string($conn, $date);
-    $time = mysqli_real_escape_string($conn, $time);
+    $date = $conn->real_escape_string($date);
+    $time = $conn->real_escape_string($time);
     $sql = "SELECT id FROM competitions WHERE date = '$date' AND time = '$time'";
     if ($excludeCompetitionID !== null) {
         $sql .= " AND id != " . (int)$excludeCompetitionID;
     }
 
-    $result = mysqli_query($conn, $sql);
+    $result = $conn->query($sql);
     if ($result) {
-        return mysqli_num_rows($result) == 0;
+        return $result->num_rows == 0;
     }
 
     return false;
@@ -31,8 +31,8 @@ $form_message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $competitionID = $_POST['id'] ?? null;
-    // for update id 
-    //for new it will be null 
+    // for update id
+    //for new it will be null
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
     $date = $_POST['date'];
@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($competitionID) {
             $sql = "UPDATE competitions SET title = '$title', description = '$description', date = '$date', time = '$time' ";
-            // admin uploaded new banner AND new banner should not same as prevoius one 
+            // admin uploaded new banner AND new banner should not same as prevoius one
             if (!empty($banner_name_to_save) && $current_banner !== $banner_name_to_save) {
                 $sql .= ", banner = '$banner_name_to_save'";
             }
@@ -112,20 +112,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $success_message = "Competition added successfully!";
         }
 
-        if (mysqli_query($conn, $sql)) {
+        if ($conn->query($sql)) {
 
             redirect("/college-competition-portal/admin/view-competition.php", 0);
             exit();
         } else {
 
-            $form_message = "Database error: " . mysqli_error($conn);
+            $form_message = "Database error: " . $conn->error;
         }
     }
 } else if ($isUpdate) {
     $sql = "SELECT title, description, date, time,banner FROM competitions WHERE id = $competitionID";
-    $result = mysqli_query($conn, $sql);
+    $result = $conn->query($sql);
 
-    if ($row = mysqli_fetch_assoc($result)) {
+    if ($row = $result->fetch_assoc()) {
         $title = $row['title'];
         $description = $row['description'];
         $date = $row['date'];
@@ -175,7 +175,7 @@ if (!empty($form_message)) :
     <div class="form-group">
         <label for="time">Time:</label>
         <input type="time" class="form-control <?php echo (!empty($time_err)) ? 'is-invalid' : ''; ?>
-            
+
         " id="time" name="time" value="<?php echo htmlspecialchars($time); ?>" min="09:00" max="18:00">
         <p id="timewarn" class="invalid-feedback d-block"><?php echo $time_err; ?></p>
     </div>

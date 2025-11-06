@@ -25,8 +25,9 @@ if (isset($_POST['register'])) {
   } else {
     $email = $post_email;
     $sql = "SELECT id FROM users WHERE email = '$email'";
-    $result = mysqli_query($conn, $sql);
-    if ($result && mysqli_num_rows($result) > 0) {
+    // OOP way
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
       $email_err = "An account with this email already exists.";
     }
   }
@@ -62,10 +63,10 @@ if (isset($_POST['register'])) {
 
 
   if (empty($name_err) && empty($email_err) && empty($phone_err) && empty($pass_err) && empty($gender_err)) {
-    $q = "INSERT INTO users (name,email,phone_no,password,gender) 
+    $q = "INSERT INTO users (name,email,phone_no,password,gender)
           VALUES ('$name','$email','$phone_no','$password','$gender')";
 
-    if (mysqli_query($conn, $q)) {
+    if ($conn->query($q)) {
 
       echo "Registration successful! You can now log in.";
       redirect("../auth/login.php", 3);
