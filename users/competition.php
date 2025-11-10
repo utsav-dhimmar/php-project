@@ -17,16 +17,19 @@ if (isset($_GET['filter_month']) && is_numeric($_GET['filter_month']) && $_GET['
 $q = "SELECT id, title, description, banner, date FROM competitions";
 
 // not in past
+// $where_clauses = [];
 $where_clauses = ["YEAR(date) >= YEAR(CURDATE())"];
 
 if ($filter_month) {
   $where_clauses[] = "MONTH(date) = $filter_month";
 }
 
-$q .= " WHERE " . implode(" AND ", $where_clauses);
+if (!empty($where_clauses)) {
+    $q .= " WHERE " . implode(" AND ", $where_clauses);
+}
 
 
-$q .= " ORDER BY date ASC";
+$q .= " ORDER BY date DESC";
 ?>
 <div class="container mt-5">
   <h2 class="mb-4">Competitions</h2>
@@ -70,10 +73,12 @@ $q .= " ORDER BY date ASC";
   if ($result) {
     if ($result->num_rows > 0) {
       while ($row = $result->fetch_array()) {
+        $competition_date = strtotime($row['date']);
+        $today = strtotime(date("Y-m-d"));
 
         echo "<div class='card mb-4 text-dark'>
                     <div class='card-header font-weight-bold '>
-                        Competition Date: " . date("l, F d, Y", strtotime($row['date'])) . "
+                        Competition Date: " . date("l, F d, Y", $competition_date) . "
                     </div>
                     <div class='card-body'>
                         <div class='row'>
@@ -86,10 +91,15 @@ $q .= " ORDER BY date ASC";
                             </div>
                         </div>
                     </div>
-                    <div class='card-footer'>
-                        <!-- Kept your original join button as requested -->
-                        <a href='/college-competition-portal/users/join_competition.php/?competitionID=" . $row['id'] . "' class='btn btn-primary'>Join Competition</a>
-                    </div>
+                    <div class='card-footer'>";
+
+        if ($competition_date < $today) {
+            echo "<button class='btn btn-primary' disabled>Competition Closed</button>";
+        } else {
+            echo "<a href='/college-competition-portal/users/join_competition.php/?competitionID=" . $row['id'] . "' class='btn btn-primary'>Join Competition</a>";
+        }
+
+        echo "</div>
                 </div>";
       }
     } else {

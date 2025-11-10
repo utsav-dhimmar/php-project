@@ -42,14 +42,14 @@ session_start();
                 <a href="/college-competition-portal/admin/view-users.php" class="btn btn-outline-primary  py-2">View Users</a>
               </li>
               <li class="m-2">
-                <a href="/college-competition-portal/server/admin.php?logout=true" class="btn btn-outline-primary py-2">Logout</a>
+                <a href="/college-competition-portal/server/admin.php?logout=true" class="btn btn-outline-warning py-2">Logout</a>
               </li>
             <?php elseif (isset($_SESSION['user_id'])): ?>
               <li class="m-2">
                 <a href="/college-competition-portal/users/dashboard.php" class="btn btn-outline-primary py-2">dashboard</a>
               </li>
               <li class="m-2">
-                <a href="/college-competition-portal/server/main.php?logout=true" class="btn btn-outline-primary py-2">Logout</a>
+                <a href="/college-competition-portal/server/main.php?logout=true" class="btn btn-outline-warning py-2">Logout</a>
               </li>
             <?php else: ?>
               <li class="m-2">
