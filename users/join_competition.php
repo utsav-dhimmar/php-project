@@ -1,40 +1,49 @@
 <?php
-require("../config/db.php");
-include("../includes/header.php");
-include("../includes/functions.php");
+require "../config/db.php";
+include "../includes/header.php";
+include "../includes/functions.php";
 requireLogin();
-$competitionID = $_GET['competitionID'] ?? "";
+$competitionID = $_GET["competitionID"] ?? "";
 if (!$competitionID) {
-    redirect("/college-competition-portal/users/competition.php");
-    exit();
+	redirect("/college-competition-portal/users/competition.php");
+	exit();
 }
 
-$userID = (int)$_SESSION['user_id'];
-$competitionID = (int)$_GET['competitionID'];
-$check_sql = "SELECT id FROM registrations WHERE user_id = $userID AND competition_id = $competitionID";
-$check_result = $conn->query($check_sql);
+$userID = (int) $_SESSION["user_id"];
+$competitionID = (int) $_GET["competitionID"];
+$check_stmt = $conn->prepare(
+	"SELECT id FROM registrations WHERE user_id = ? AND competition_id = ?",
+);
+$check_stmt->bind_param("ii", $userID, $competitionID);
+$check_stmt->execute();
+$check_result = $check_stmt->get_result();
 
 if ($check_result && $check_result->num_rows > 0) {
-    echo "You have already joined this competition.";
+	echo "You have already joined this competition.";
 
-    redirect("/college-competition-portal/users/my-competition.php", 1);
-    exit();
+	redirect("/college-competition-portal/users/my-competition.php", 1);
+	exit();
 }
 
-$q = "INSERT INTO registrations (user_id,competition_id ) VALUES (" . $userID . "," . $competitionID . " )";
-$result =  $conn->query($q);
+$insert_stmt = $conn->prepare(
+	"INSERT INTO registrations (user_id, competition_id) VALUES (?, ?)",
+);
 
+$insert_stmt->bind_param("ii", $userID, $competitionID);
+
+$result = $insert_stmt->execute();
 
 if ($result) {
-    echo "Register successfully redirect to my competition page";
-    redirect("/college-competition-portal/users/my-competition.php");
-    exit();
+	echo "Register successfully redirect to my competition page";
+	redirect("/college-competition-portal/users/my-competition.php");
+	exit();
 } else {
-    echo "<div class='alert alert-danger'>Failed to fetch records: " . $conn->error . "</div>";
-    exit();
+	echo "<div class='alert alert-danger'>Failed to fetch records: " .
+		htmlspecialchars($conn->error) .
+		"</div>";
+	exit();
 }
 ?>
 
-<?php
-include("../includes/footer.php");
+<?php include "../includes/footer.php";
 ?>

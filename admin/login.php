@@ -1,53 +1,47 @@
 <?php
-require("../includes/functions.php");
-include("../includes/header.php");
+require "../includes/functions.php";
+include "../includes/header.php";
 const ADMIN_EMAIL = "admin@ccp.com";
 const ADMIN_PASSWORD = "abcd@admin";
 
-$error_message = '';
+$error_message = "";
 
 // normal user no
-if (isset($_SESSION['user_id'])) {
-  redirect("/college-competition-portal/users/dashboard.php", 0);
-  exit();
+if (isset($_SESSION["user_id"])) {
+	redirect("/college-competition-portal/users/dashboard.php", 0);
+	exit();
 }
 
 // Ialready login bye bye
-if (isset($_SESSION['admin_email'])) {
-  redirect("/college-competition-portal/admin/links.php", 0);
-  exit();
+if (isset($_SESSION["admin_email"])) {
+	redirect("/college-competition-portal/admin/links.php", 0);
+	exit();
 }
 
-if (isset($_POST['admin-login'])) {
-  $email = trim($_POST['email']);
-  $password = $_POST['password'];
+if (isset($_POST["admin-login"])) {
+	$email = trim($_POST["email"]);
+	$password = $_POST["password"];
 
-  if (empty($email) || empty($password)) {
-    $error_message = "Email and password fields are required.";
-  } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $error_message = "Invalid email.";
-  } elseif ($email === ADMIN_EMAIL && $password === ADMIN_PASSWORD) {
-    echo  "login successful";
-    $_SESSION['admin_email'] = ADMIN_EMAIL;
-    // var_dump($_SESSION);
-    redirect("../admin/links.php", 1);
-    exit();
-  } else {
-
-    $error_message = "Invalid admin credentials. Please try again.";
-  }
+	if (empty($email) || empty($password)) {
+		$error_message = "Email and password fields are required.";
+	} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$error_message = "Invalid email.";
+	} elseif ($email === ADMIN_EMAIL && $password === ADMIN_PASSWORD) {
+		echo "login successful";
+		$_SESSION["admin_email"] = ADMIN_EMAIL;
+		// var_dump($_SESSION);
+		redirect("../admin/links.php", 1);
+		exit();
+	} else {
+		$error_message = "Invalid admin credentials. Please try again.";
+	}
 }
-
-
 ?>
 
 <div class="container">
   <h1 class="text-center">Login as <b>admin</b></h1>
 
-  <?php
-
-  if (!empty($error_message)):
-  ?>
+  <?php if (!empty($error_message)): ?>
     <div class="alert alert-danger" role="alert">
       <?php echo htmlspecialchars($error_message); ?>
     </div>
@@ -135,6 +129,5 @@ if (isset($_POST['admin-login'])) {
   });
 </script>
 
-<?php
-include("../includes/footer.php");
+<?php include "../includes/footer.php";
 ?>

@@ -1,6 +1,5 @@
 <?php
-session_start();
-?>
+session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,10 +17,9 @@ session_start();
           <ul class="list-unstyled d-flex flex-wrap justify-content-center">
             <li class="m-2">
               <a href="/college-competition-portal" class="btn btn-outline-primary  py-2">Home</a>
-              <!-- <a href="/college-competition-portal" class="btn  py-2">Home</a> -->
             </li>
 
-            <?php if (!isset($_SESSION['admin_email'])): ?>
+            <?php if (!isset($_SESSION["admin_email"])): ?>
               <li class="m-2">
                 <a href="/college-competition-portal/users/competition.php" class="btn btn-outline-primary  py-2">Competitions</a>
               </li>
@@ -31,7 +29,7 @@ session_start();
               <a href="/college-competition-portal/about.php" class="btn btn-outline-primary  py-2">About</a>
             </li>
 
-            <?php if (isset($_SESSION['admin_email'])): ?>
+            <?php if (isset($_SESSION["admin_email"])): ?>
               <li class="m-2">
                 <a href="/college-competition-portal/admin/competition-form.php" class="btn btn-outline-primary py-2">Add Competitions</a>
               </li>
@@ -42,14 +40,14 @@ session_start();
                 <a href="/college-competition-portal/admin/view-users.php" class="btn btn-outline-primary  py-2">View Users</a>
               </li>
               <li class="m-2">
-                <a href="/college-competition-portal/server/admin.php?logout=true" class="btn btn-outline-warning py-2">Logout</a>
+                <a href="/college-competition-portal/auth/logout.php?admin=true" class="btn btn-outline-warning py-2">Logout</a>
               </li>
-            <?php elseif (isset($_SESSION['user_id'])): ?>
+            <?php elseif (isset($_SESSION["user_id"])): ?>
               <li class="m-2">
                 <a href="/college-competition-portal/users/dashboard.php" class="btn btn-outline-primary py-2">dashboard</a>
               </li>
               <li class="m-2">
-                <a href="/college-competition-portal/server/main.php?logout=true" class="btn btn-outline-warning py-2">Logout</a>
+                <a href="/college-competition-portal/auth/logout.php" class="btn btn-outline-warning py-2">Logout</a>
               </li>
             <?php else: ?>
               <li class="m-2">

@@ -1,46 +1,48 @@
 <?php
-require("../config/db.php");
-include("../includes/header.php");
-include("../includes/functions.php");
+require "../config/db.php";
+include "../includes/header.php";
+include "../includes/functions.php";
 requireLogin();
-
 ?>
 
 <div class="container mt-5">
   <h2 class="mb-4">Joined Competitions</h2>
 
-  <?php
-  if (isset($_GET['withdrawal'])) {
-    $withdrawal_status = $_GET['withdrawal'];
-    if ($withdrawal_status == 'success') {
-      echo "<div class='alert alert-success'>You have successfully withdrawn from the competition.</div>";
-    } else if ($withdrawal_status == 'error') {
-      echo "<div class='alert alert-danger'>Something went wrong. Please try again.</div>";
-    } else if ($withdrawal_status == 'not_allowed') {
-      echo "<div class='alert alert-warning'>Withdrawal is not allowed at this time. Please contact the admin.</div>";
-    } else if ($withdrawal_status == 'invalid_competition') {
-      echo "<div class='alert alert-danger'>Invalid competition.</div>";
-    }
-  }
-  ?>
+  <?php if (isset($_GET["withdrawal"])) {
+  	$withdrawal_status = $_GET["withdrawal"];
+  	switch ($withdrawal_status) {
+  		case "success":
+  			echo "<div class='alert alert-success'>You have successfully withdrawn from the competition.</div>";
+  			break;
+  		case "error":
+  			echo "<div class='alert alert-danger'>Something went wrong. Please try again.</div>";
+  			break;
+  		case "not_allowed":
+  			echo "<div class='alert alert-warning'>Withdrawal is not allowed at this time. Please contact the admin.</div>";
+  			break;
+  		case "invalid_competition":
+  			echo "<div class='alert alert-danger'>Invalid competition.</div>";
+  			break;
+  	}
+  } ?>
 
   <?php
+  $user_id = $_SESSION["user_id"];
 
-  $user_id = $_SESSION['user_id'];
-
-    $q = "SELECT
+  $stmt = $conn->prepare("SELECT
       competitions.id as competition_id,
       competitions.title as title,
       competitions.date as date,
       competitions.time as time,
       registrations.created_at as join_date
-      from registrations join competitions on registrations.competition_id = competitions.id  where registrations.user_id  = $user_id";
-    $result =  $conn->query($q);
+      from registrations join competitions on registrations.competition_id = competitions.id  where registrations.user_id  = ?");
+  $stmt->bind_param("i", $user_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
-
-    if ($result) {
-      if ($result->num_rows > 0) {
-        echo ' <table class="table  table-hover">
+  if ($result) {
+  	if ($result->num_rows > 0) {
+  		echo ' <table class="table  table-hover">
           <thead>
             <tr>
               <th scope="col">title</th>
@@ -51,32 +53,45 @@ requireLogin();
             </tr>
           </thead>
           <tbody>';
-        while ($row = $result->fetch_assoc()) {
-          $competition_date = strtotime($row['date']);
-          $today = strtotime(date("Y-m-d"));
-          $diff = $competition_date - $today;
-          $days_left = floor($diff / (60 * 60 * 24));
+  		while ($row = $result->fetch_assoc()) {
+  			$competition_date = strtotime($row["date"]);
+  			$today = strtotime(date("Y-m-d"));
+  			$diff = $competition_date - $today;
+  			$days_left = floor($diff / (60 * 60 * 24));
 
-          echo "<tr>
-                      <td>" . htmlspecialchars($row['title']) . "</td>
-                      <td>" . htmlspecialchars($row['date']) . "</td>
-                      <td>" . htmlspecialchars($row['time']) . "</td>
-                      <td>" . htmlspecialchars($row['join_date']) . "</td>";
+  			echo "<tr>
+                      <td>" .
+  				htmlspecialchars($row["title"]) .
+  				"</td>
+                      <td>" .
+  				htmlspecialchars($row["date"]) .
+  				"</td>
+                      <td>" .
+  				htmlspecialchars($row["time"]) .
+  				"</td>
+                      <td>" .
+  				htmlspecialchars($row["join_date"]) .
+  				"</td>";
 
-          if ($days_left >= 2) {
-            echo "<td><a href='withdraw.php?competition_id=" . $row['competition_id'] . "' class='btn btn-danger'>Withdraw</a></td>";
-          } else {
-            echo "<td><button class='btn btn-danger withdraw-btn' disabled data-toggle='tooltip' data-placement='top' title='Withdrawal not allowed. Contact admin.'>Withdraw</button></td>";
-          }
+  			if ($days_left >= 2) {
+  				echo "<td><a href='withdraw.php?competition_id=" .
+  					htmlspecialchars($row["competition_id"]) .
+  					"' class='btn btn-danger'>Withdraw</a></td>";
+  			} else {
+  				echo "<td><button class='btn btn-danger withdraw-btn' disabled data-toggle='tooltip' data-placement='top' title='Withdrawal not allowed. Contact admin.'>Withdraw</button></td>";
+  			}
 
-          echo "</tr>";
-        }
-        echo ' </tbody>
-    </table>';    } else {
-      echo "<div class='alert alert-info'>You are nor take part in any competition</div>";
-    }
+  			echo "</tr>";
+  		}
+  		echo ' </tbody>
+    </table>';
+  	} else {
+  		echo "<div class='alert alert-info'>You are not take part in any competition</div>";
+  	}
   } else {
-    echo "<div class='alert alert-danger'>Failed to fetch records: " . $conn->error . "</div>";
+  	echo "<div class='alert alert-danger'>Failed to fetch records: " .
+  		$conn->error .
+  		"</div>";
   }
   ?>
 
@@ -96,6 +111,5 @@ if (window.innerWidth <= 768) {
     }
 }
 </script>
-<?php
-include("../includes/footer.php");
+<?php include "../includes/footer.php";
 ?>

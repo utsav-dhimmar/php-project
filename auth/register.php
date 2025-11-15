@@ -1,88 +1,97 @@
 <?php
-require("../config/db.php");
-require("../includes/functions.php");
-include("../includes/header.php");
+require "../config/db.php";
+require "../includes/functions.php";
+include "../includes/header.php";
 
 $name = $email = $phone_no = $gender = "";
-$name_err = $email_err = $phone_err = $pass_err = $gender_err = $form_message = "";
+$name_err = $email_err = $phone_err = $pass_err = $gender_err = $form_message =
+	"";
 
+if (isset($_POST["register"])) {
+	if (
+		empty(trim($_POST["name"])) ||
+		!preg_match("/^[a-zA-Z\s]*$/", trim($_POST["name"]))
+	) {
+		$name_err = "Please enter a valid name (letters and spaces only).";
+	} else {
+		$name = trim($_POST["name"]);
+	}
 
-if (isset($_POST['register'])) {
+	$post_email = trim($_POST["email"]);
+	if (empty($post_email)) {
+		$email_err = "Please enter your email.";
+	} elseif (!filter_var($post_email, FILTER_VALIDATE_EMAIL)) {
+		$email_err = "Please enter a valid email format.";
+	} else {
+		$email = $post_email;
+		$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+		$stmt->bind_param("s", $email);
+		$stmt->execute();
+		$result = $stmt->get_result();
+		if ($result && $result->num_rows > 0) {
+			$email_err = "An account with this email already exists.";
+		}
+	}
 
+	if (empty(trim($_POST["phone_no"]))) {
+		$phone_err = "Please enter your phone number.";
+	} elseif (!preg_match('/^[0-9]{10}$/', trim($_POST["phone_no"]))) {
+		$phone_err = "Phone number must be exactly 10 digits.";
+	} else {
+		$phone_no = trim($_POST["phone_no"]);
+	}
 
-  if (empty(trim($_POST["name"])) || !preg_match("/^[a-zA-Z\s]*$/", trim($_POST["name"]))) {
-    $name_err = "Please enter a valid name (letters and spaces only).";
-  } else {
-    $name = trim($_POST["name"]);
-  }
+	if (empty($_POST["password"])) {
+		$pass_err = "Please enter a password.";
+	} elseif (strlen($_POST["password"]) < 4) {
+		$pass_err = "Password must have at least 4 characters.";
+	} elseif (empty($_POST["confirm-password"])) {
+		$pass_err = "Please confirm your password.";
+	} elseif ($_POST["password"] !== $_POST["confirm-password"]) {
+		$pass_err = "Passwords do not match.";
+	} else {
+		$password = password_hash($_POST["password"], PASSWORD_DEFAULT);
+	}
 
+	if (empty($_POST["gender"])) {
+		$gender_err = "Please select your gender.";
+	} else {
+		$gender = $_POST["gender"];
+	}
 
-  $post_email = trim($_POST["email"]);
-  if (empty($post_email)) {
-    $email_err = "Please enter your email.";
-  } elseif (!filter_var($post_email, FILTER_VALIDATE_EMAIL)) {
-    $email_err = "Please enter a valid email format.";
-  } else {
-    $email = $post_email;
-    $sql = "SELECT id FROM users WHERE email = '$email'";
-    // OOP way
-    $result = $conn->query($sql);
-    if ($result && $result->num_rows > 0) {
-      $email_err = "An account with this email already exists.";
-    }
-  }
+	if (
+		empty($name_err) &&
+		empty($email_err) &&
+		empty($phone_err) &&
+		empty($pass_err) &&
+		empty($gender_err)
+	) {
+		$stmt = $conn->prepare(
+			"INSERT INTO users (name, email, phone_no, password, gender) VALUES (?, ?, ?, ?, ?)",
+		);
+		$stmt->bind_param(
+			"sssss",
+			$name,
+			$email,
+			$phone_no,
+			$password,
+			$gender,
+		);
 
-
-  if (empty(trim($_POST["phone_no"]))) {
-    $phone_err = "Please enter your phone number.";
-  } elseif (!preg_match('/^[0-9]{10}$/', trim($_POST['phone_no']))) {
-    $phone_err = "Phone number must be exactly 10 digits.";
-  } else {
-    $phone_no = trim($_POST["phone_no"]);
-  }
-
-
-  if (empty($_POST["password"])) {
-    $pass_err = "Please enter a password.";
-  } elseif (strlen($_POST["password"]) < 4) {
-    $pass_err = "Password must have at least 4 characters.";
-  } elseif (empty($_POST["confirm-password"])) {
-    $pass_err = "Please confirm your password.";
-  } elseif ($_POST["password"] !== $_POST["confirm-password"]) {
-    $pass_err = "Passwords do not match.";
-  } else {
-    $password = $_POST["password"];
-  }
-
-
-  if (empty($_POST["gender"])) {
-    $gender_err = "Please select your gender.";
-  } else {
-    $gender = $_POST["gender"];
-  }
-
-
-  if (empty($name_err) && empty($email_err) && empty($phone_err) && empty($pass_err) && empty($gender_err)) {
-    $q = "INSERT INTO users (name,email,phone_no,password,gender)
-          VALUES ('$name','$email','$phone_no','$password','$gender')";
-
-    if ($conn->query($q)) {
-
-      echo "Registration successful! You can now log in.";
-      redirect("../auth/login.php", 3);
-      exit();
-    } else {
-      $form_message = "Something went wrong. Please try again later.";
-    }
-  }
+		if ($stmt->execute()) {
+			echo "Registration successful! You can now log in.";
+			redirect("../auth/login.php", 3);
+			exit();
+		} else {
+			$form_message = "Something went wrong. Please try again later.";
+		}
+	}
 }
-
-
 ?>
 <div class="container">
   <h1 class="text-center">Registration form</h1>
 
-  <?php if (!empty($form_message)) : ?>
+  <?php if (!empty($form_message)): ?>
     <div class="alert alert-danger"><?php echo $form_message; ?></div>
   <?php endif; ?>
 
@@ -91,39 +100,63 @@ if (isset($_POST['register'])) {
     <!-- name -->
     <div class="form-group">
       <label for="name">Name:</label>
-      <input type="text" class="form-control <?php echo (!empty($name_err)) ? 'is-invalid' : ''; ?>" id="name" name="name" placeholder="Enter Your Name" value="<?php echo htmlspecialchars($name); ?>" required />
+      <input type="text" class="form-control <?php echo !empty($name_err)
+      	? "is-invalid"
+      	: ""; ?>" id="name" name="name" placeholder="Enter Your Name" value="<?php echo htmlspecialchars(
+	$name,
+); ?>" required />
 
-      <div id="name-feedback" class="invalid-feedback"><?php echo $name_err; ?></div>
+      <div id="name-feedback" class="invalid-feedback"><?php echo htmlspecialchars(
+      	$name_err,
+      ); ?></div>
     </div>
 
     <!-- email -->
     <div class="form-group">
       <label for="email">Email:</label>
-      <input type="email" class="form-control <?php echo (!empty($email_err)) ? 'is-invalid' : ''; ?>" id="email" name="email" placeholder="Enter Your Email" value="<?php echo htmlspecialchars($email); ?>" required />
+      <input type="email" class="form-control <?php echo !empty($email_err)
+      	? "is-invalid"
+      	: ""; ?>" id="email" name="email" placeholder="Enter Your Email" value="<?php echo htmlspecialchars(
+	$email,
+); ?>" required />
 
-      <div id="email-feedback" class="invalid-feedback"><?php echo $email_err; ?></div>
+      <div id="email-feedback" class="invalid-feedback"><?php echo htmlspecialchars(
+      	$email_err,
+      ); ?></div>
     </div>
 
     <!-- phone no -->
     <div class="form-group">
       <label for="phoneNumber">Phone Number:</label>
-      <input type="text" class="form-control <?php echo (!empty($phone_err)) ? 'is-invalid' : ''; ?>" id="phoneNumber" name="phone_no" value="<?php echo htmlspecialchars($phone_no); ?>" required placeholder="Enter Your Phone Number" />
+      <input type="text" class="form-control <?php echo !empty($phone_err)
+      	? "is-invalid"
+      	: ""; ?>" id="phoneNumber" name="phone_no" value="<?php echo htmlspecialchars(
+	$phone_no,
+); ?>" required placeholder="Enter Your Phone Number" />
 
-      <div id="phone-feedback" class="invalid-feedback"><?php echo $phone_err; ?></div>
+      <div id="phone-feedback" class="invalid-feedback"><?php echo htmlspecialchars(
+      	$phone_err,
+      ); ?></div>
     </div>
 
     <!-- password -->
     <div class="form-group">
       <label for="password">Password:</label>
-      <input type="password" class="form-control <?php echo (!empty($pass_err)) ? 'is-invalid' : ''; ?>" id="password" name="password" placeholder="Enter Password" required />
+      <input type="password" class="form-control <?php echo !empty($pass_err)
+      	? "is-invalid"
+      	: ""; ?>" id="password" name="password" placeholder="Enter Password" required />
     </div>
 
     <!-- confirm password -->
     <div class="form-group">
       <label for="confirm-password">Confirm password:</label>
-      <input type="password" class="form-control <?php echo (!empty($pass_err)) ? 'is-invalid' : ''; ?>" id="confirm-password" name="confirm-password" placeholder="Enter confirm password" required />
+      <input type="password" class="form-control <?php echo !empty($pass_err)
+      	? "is-invalid"
+      	: ""; ?>" id="confirm-password" name="confirm-password" placeholder="Enter confirm password" required />
 
-      <div id="pass-feedback" class="invalid-feedback"><?php echo $pass_err; ?></div>
+      <div id="pass-feedback" class="invalid-feedback"><?php echo htmlspecialchars(
+      	$pass_err,
+      ); ?></div>
     </div>
 
     <!-- gender -->
@@ -131,15 +164,29 @@ if (isset($_POST['register'])) {
       <label>Gender:</label>
       <div>
         <div class="form-check form-check-inline">
-          <input class="form-check-input <?php echo (!empty($gender_err)) ? 'is-invalid' : ''; ?>" type="radio" name="gender" id="male" value="male" <?php if ($gender === 'male') echo 'checked'; ?>>
+          <input class="form-check-input <?php echo !empty($gender_err)
+          	? "is-invalid"
+          	: ""; ?>" type="radio" name="gender" id="male" value="male" <?php if (
+	$gender === "male"
+) {
+	echo "checked";
+} ?>>
           <label class="form-check-label" for="male">Male</label>
         </div>
         <div class="form-check form-check-inline">
-          <input class="form-check-input <?php echo (!empty($gender_err)) ? 'is-invalid' : ''; ?>" type="radio" name="gender" id="female" value="female" <?php if ($gender === 'female') echo 'checked'; ?>>
+          <input class="form-check-input <?php echo !empty($gender_err)
+          	? "is-invalid"
+          	: ""; ?>" type="radio" name="gender" id="female" value="female" <?php if (
+	$gender === "female"
+) {
+	echo "checked";
+} ?>>
           <label class="form-check-label" for="female">Female</label>
         </div>
 
-        <div id="gender-feedback" class="invalid-feedback d-block"><?php echo $gender_err; ?></div>
+        <div id="gender-feedback" class="invalid-feedback d-block"><?php echo htmlspecialchars(
+        	$gender_err,
+        ); ?></div>
       </div>
     </div>
 
@@ -269,6 +316,5 @@ if (isset($_POST['register'])) {
   });
 </script>
 
-<?php
-include("../includes/footer.php");
+<?php include "../includes/footer.php";
 ?>

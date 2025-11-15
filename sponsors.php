@@ -1,6 +1,5 @@
 <?php
-include("includes/header.php");
-?>
+include "includes/header.php"; ?>
 
 
 <div class="container my-5">
@@ -38,6 +37,5 @@ include("includes/header.php");
     </tbody>
   </table>
 
-  <?php
-  include("includes/footer.php");
-  ?>
+  <?php include "includes/footer.php";
+?>

@@ -1,53 +1,53 @@
 <?php
-include("../includes/header.php");
-require("../config/db.php");
+include "../includes/header.php";
+require "../config/db.php";
 
-require("../includes/functions.php");
-if (isset($_SESSION['admin_email'])) {
-  redirect("/college-competition-portal/admin/view-competition.php", 0);
-  exit();
+require "../includes/functions.php";
+if (isset($_SESSION["admin_email"])) {
+	redirect("/college-competition-portal/admin/view-competition.php", 0);
+	exit();
 }
 if (isLoggedIn()) {
-  redirect("/college-competition-portal", 0);
-  exit();
+	redirect("/college-competition-portal", 0);
+	exit();
 }
 
-$error_message = '';
+$error_message = "";
 
-if (isset($_POST['login'])) {
-  $email = trim($_POST['email']);
-  $password = $_POST['password'];
+if (isset($_POST["login"])) {
+	$email = trim($_POST["email"]);
+	$password = $_POST["password"];
 
-  if (empty($email) || empty($password)) {
-    $error_message = "Email and password are required.";
-  } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $error_message = "Invalid email.";
-  } else {
-    $q = "SELECT * FROM users WHERE email = '$email' AND password = '$password'";
+	if (empty($email) || empty($password)) {
+		$error_message = "Email and password are required.";
+	} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$error_message = "Invalid email.";
+	} else {
+		$stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+		$stmt->bind_param("s", $email);
+		$stmt->execute();
+		$result = $stmt->get_result();
 
-    // OOP way
-    $result = $conn->query($q);
-
-    if ($result && $result->num_rows > 0) {
-
-      $row = $result->fetch_array();
-      $_SESSION['user_id'] = $row['id'];
-      echo "Login successfully. Redirecting to competition page...";
-      redirect("../users/competition.php");
-      exit();
-    } else {
-      $error_message = "Invalid email or password.";
-    }
-  }
+		if ($result && $result->num_rows > 0) {
+			$row = $result->fetch_assoc();
+			if (password_verify($password, $row["password"])) {
+				$_SESSION["user_id"] = $row["id"];
+				echo "Login successfully. Redirecting to competition page...";
+				redirect("../users/competition.php");
+				exit();
+			} else {
+				$error_message = "Invalid email or password.";
+			}
+		} else {
+			$error_message = "Invalid email or password.";
+		}
+	}
 }
 ?>
 
 <div class="container">
   <h1 class="text-center">Login Page</h1>
-  <?php
-
-  if (!empty($error_message)) :
-  ?>
+  <?php if (!empty($error_message)): ?>
     <div class="alert alert-danger" role="alert">
       <?php echo htmlspecialchars($error_message); ?>
     </div>

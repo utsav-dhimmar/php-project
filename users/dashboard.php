@@ -1,9 +1,9 @@
 <?php
-require("../config/db.php");
-include("../includes/header.php");
-include("../includes/functions.php");
+require "../config/db.php";
+include "../includes/header.php";
+include "../includes/functions.php";
 requireLogin();
-redirect("/college-competition-portal/users/my-competition.php", 0)
+redirect("/college-competition-portal/users/my-competition.php", 0);
 ?>
 <ul class="list-unstyled d-flex flex-wrap justify-content-center">
 
@@ -12,6 +12,5 @@ redirect("/college-competition-portal/users/my-competition.php", 0)
     </li>
 </ul>
 
-<?php
-include("../includes/footer.php");
+<?php include "../includes/footer.php";
 ?>
