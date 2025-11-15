@@ -6,6 +6,7 @@ requireLogin();
 
 if (!isset($_GET['competition_id']) || !is_numeric($_GET['competition_id'])) {
     redirect("my-competition.php");
+    exit();
 }
 
 $competition_id = (int)$_GET['competition_id'];

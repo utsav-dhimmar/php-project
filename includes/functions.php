@@ -16,6 +16,7 @@ function requireLogin()
 {
     if (!isLoggedIn()) {
         header("Location: /college-competition-portal/auth/login.php");
+        exit();
     }
 }
 
@@ -23,6 +24,7 @@ function requireAdminLogin()
 {
     if (!isset($_SESSION['admin_email'])) {
         header("Location: /college-competition-portal/admin/login.php");
+        exit();
     }
 }
 ?>

@@ -5,6 +5,7 @@ include("../includes/functions.php");
 requireLogin();
 if (isset($_SESSION['admin_email'])) {
   redirect("/college-competition-portal/admin/view-competition.php", 0);
+  exit();
 }
 
 $filter_month = null;

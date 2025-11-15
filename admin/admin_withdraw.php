@@ -6,6 +6,7 @@ requireAdminLogin();
 
 if (!isset($_GET['registration_id']) || !is_numeric($_GET['registration_id'])) {
     redirect("view-competition.php");
+    exit();
 }
 
 $registration_id = (int)$_GET['registration_id'];
