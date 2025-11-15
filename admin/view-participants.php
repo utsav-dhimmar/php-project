@@ -6,7 +6,7 @@ requireAdminLogin();
 if (!isset($_GET['competitionID']) || !is_numeric($_GET['competitionID'])) {
     echo "Error: Invalid or missing Competition ID.";
     redirect("/college-competition-portal/admin/view-competition.php", 1);
-    return;
+    exit();
 }
 $competitionID = (int)$_GET['competitionID'];
 $title_query = "SELECT title FROM competitions WHERE id = $competitionID";

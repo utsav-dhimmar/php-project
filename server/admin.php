@@ -50,6 +50,7 @@ if (isset($_POST['admin-login'])) {
         $_SESSION['admin_email'] = ADMIN_EMAIL;
         echo "Login successfully";
         redirect("../admin/links.php");
+        exit();
     } else {
         echo "<p style='color:red;'>Incorrect admin credentials.</p>";
     }
@@ -90,6 +91,7 @@ if (isset($_POST['admin-login'])) {
         if ($result) {
             echo "Competition created successfully";
             redirect("../admin/view-competition.php");
+            exit();
         } else {
             echo "Failed to insert records: " . $conn->error;
         }
@@ -137,12 +139,14 @@ if (isset($_POST['admin-login'])) {
                 if ($result) {
                     echo "Competition updated successfully";
                     redirect("../admin/view-competition.php");
+                    exit();
                 } else {
                     echo "Failed to update records: " . $conn->error;
                 }    }
 } elseif (isset($_GET['logout'])) {
     unset($_SESSION['admin_email']);
     redirect("/college-competition-portal/index.php", 0);
+    exit();
 } else {
     echo "<p style='color:red;'>Something went wrong.</p>";
 }

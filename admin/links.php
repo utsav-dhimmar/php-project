@@ -5,6 +5,7 @@ $email = $_SESSION['admin_email'];
 
 if (!$email) {
     redirect("/college-competition-portal/", 10);
+    exit();
 }
 
 ?>

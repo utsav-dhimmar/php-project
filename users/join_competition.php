@@ -6,6 +6,7 @@ requireLogin();
 $competitionID = $_GET['competitionID'] ?? "";
 if (!$competitionID) {
     redirect("/college-competition-portal/users/competition.php");
+    exit();
 }
 
 $userID = (int)$_SESSION['user_id'];

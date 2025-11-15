@@ -5,9 +5,11 @@ require("../config/db.php");
 require("../includes/functions.php");
 if (isset($_SESSION['admin_email'])) {
   redirect("/college-competition-portal/admin/view-competition.php", 0);
+  exit();
 }
 if (isLoggedIn()) {
   redirect("/college-competition-portal", 0);
+  exit();
 }
 
 $error_message = '';
