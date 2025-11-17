@@ -4,6 +4,7 @@ session_start(); ?>
 <html lang="en">
 
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Competitions - My System</title>
   <link rel="stylesheet" href="/college-competition-portal/bootstrap/bootstrap.min.css" />
   <link rel="stylesheet" href="/college-competition-portal/assets/css/styles.css">

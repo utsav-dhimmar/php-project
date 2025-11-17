@@ -162,7 +162,7 @@ if (isset($_POST["register"])) {
     <!-- gender -->
     <div class="form-group">
       <label>Gender:</label>
-      <div>
+
         <div class="form-check form-check-inline">
           <input class="form-check-input <?php echo !empty($gender_err)
           	? "is-invalid"
@@ -188,7 +188,7 @@ if (isset($_POST["register"])) {
         	$gender_err,
         ); ?></div>
       </div>
-    </div>
+
 
 
     <div class="form-group">
