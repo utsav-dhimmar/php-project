@@ -28,8 +28,8 @@ function isTimeSlotAvailable($conn, $date, $time, $excludeCompetitionID = null)
 	return false;
 }
 
-$isUpdate = isset($_GET["competitionID"]) && is_numeric($_GET["competitionID"]);
-$competitionID = $isUpdate ? $_GET["competitionID"] : null;
+$competitionID = $_GET["competitionID"] ?? ($_POST["id"] ?? null);
+$isUpdate = !empty($competitionID) && is_numeric($competitionID);
 
 $title = $description = $date = $time = "";
 $title_err = $description_err = $date_err = $time_err = $banner_err = "";
@@ -44,47 +44,82 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	$date = $_POST["date"];
 	$time = $_POST["time"];
 	$current_banner = $_POST["current_banner"] ?? "";
-	$banner_name_to_save = $current_banner ?? "";
+	$banner_name_to_save = $current_banner;
 
 	if (isset($_FILES["banner"]) && $_FILES["banner"]["error"] == 0) {
 		$upload_dir = "../uploads/";
-		$allowed_types = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF];
+		$allowed_extensions = ["jpg", "jpeg", "png", "gif"];
+		$allowed_mime_types = ["image/jpeg", "image/png", "image/gif"];
 		$max_size = 10 * 1024 * 1024;
 
 		$file_size = $_FILES["banner"]["size"];
 		$temp_file = $_FILES["banner"]["tmp_name"];
+		$original_filename = $_FILES["banner"]["name"];
+		$file_extension = strtolower(
+			pathinfo($original_filename, PATHINFO_EXTENSION),
+		);
 
-		$image_info = getimagesize($temp_file);
-
-		if ($image_info === false) {
-			$banner_err = "Invalid image file.";
-		} elseif (!in_array($image_info[2], $allowed_types)) {
-			$banner_err =
-				"Invalid file type. Only JPEG, PNG, and GIF are allowed.";
-		} elseif ($file_size > $max_size) {
-			$banner_err = "File is too large. Maximum size is 10 MB.";
+		// First check: File extension
+		if (!in_array($file_extension, $allowed_extensions)) {
+			$banner_err = "Invalid file type. Only image files (JPG, JPEG, PNG, GIF) are allowed. You uploaded a .$file_extension file.";
 		} else {
-			$file_extension = pathinfo(
-				$_FILES["banner"]["name"],
-				PATHINFO_EXTENSION,
-			);
-			$unique_filename = time() . "_" . uniqid() . "." . $file_extension;
-			$target_file = $upload_dir . $unique_filename;
+			// Second check: MIME type validation
+			$finfo = new finfo(FILEINFO_MIME_TYPE);
+			$mime_type = $finfo->file($temp_file);
 
-			if (move_uploaded_file($temp_file, $target_file)) {
-				$banner_name_to_save = $unique_filename;
-
-				if (
-					!empty($current_banner) &&
-					file_exists($upload_dir . $current_banner)
-				) {
-					unlink($upload_dir . $current_banner);
-				}
+			if (!in_array($mime_type, $allowed_mime_types)) {
+				$banner_err =
+					"Invalid file type detected. Only image files are allowed. The file you uploaded appears to be a " .
+					$mime_type .
+					" file.";
 			} else {
-				$banner_err = "Sorry, there was an error uploading your file.";
+				// Third check: Verify it's actually an image
+				$image_info = getimagesize($temp_file);
+
+				if ($image_info === false) {
+					$banner_err =
+						"The uploaded file is not a valid image. Please upload only JPG, JPEG, PNG, or GIF images.";
+				} elseif ($file_size > $max_size) {
+					$banner_err = "File is too large. Maximum size is 10 MB.";
+				} else {
+					// All validations passed, proceed with upload
+					$unique_filename =
+						time() . "_" . uniqid() . "." . $file_extension;
+					$target_file = $upload_dir . $unique_filename;
+
+					if (move_uploaded_file($temp_file, $target_file)) {
+						$banner_name_to_save = $unique_filename;
+
+						// Delete old banner if updating
+						if (
+							!empty($current_banner) &&
+							file_exists($upload_dir . $current_banner)
+						) {
+							unlink($upload_dir . $current_banner);
+						}
+					} else {
+						$banner_err =
+							"Sorry, there was an error uploading your file.";
+					}
+				}
 			}
 		}
+	} elseif (isset($_FILES["banner"]) && $_FILES["banner"]["error"] != 4) {
+		// Handle other upload errors (error code 4 means no file was uploaded)
+		$error_messages = [
+			UPLOAD_ERR_INI_SIZE => "The uploaded file exceeds the server's maximum file size.",
+			UPLOAD_ERR_FORM_SIZE => "The uploaded file is too large.",
+			UPLOAD_ERR_PARTIAL => "The file was only partially uploaded. Please try again.",
+			UPLOAD_ERR_NO_TMP_DIR => "Missing temporary folder. Please contact the administrator.",
+			UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk. Please contact the administrator.",
+			UPLOAD_ERR_EXTENSION => "File upload stopped by extension. Please contact the administrator.",
+		];
+
+		$error_code = $_FILES["banner"]["error"];
+		$banner_err =
+			$error_messages[$error_code] ?? "Unknown upload error occurred.";
 	}
+
 	if (strlen($title) < 3) {
 		$title_err = "Title must be at least 3 characters.";
 	}
@@ -124,33 +159,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 		if ($competitionID) {
 			$sql =
-				"UPDATE competitions SET title = ?, description = ?, date = ?, time = ?";
-
-			$types = "ssss";
-
-			$params = [$title, $description, $date, $time];
-
-			if (
-				!empty($banner_name_to_save) &&
-				$current_banner !== $banner_name_to_save
-			) {
-				$sql .= ", banner = ?";
-
-				$types .= "s";
-
-				$params[] = $banner_name_to_save;
-			}
-
-			$sql .= " WHERE id = ?";
-
-			$types .= "i";
-
-			$params[] = $competitionID;
-
+				"UPDATE competitions SET title = ?, description = ?, date = ?, time = ?, banner = ? WHERE id = ?";
 			$stmt = $conn->prepare($sql);
-
-			$stmt->bind_param($types, ...$params);
-
+			$stmt->bind_param(
+				"sssssi",
+				$title,
+				$description,
+				$date,
+				$time,
+				$banner_name_to_save,
+				$competitionID,
+			);
 			$success_message = "Competition updated successfully!";
 		} else {
 			$sql =
@@ -195,7 +214,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		$time = $row["time"];
 		$current_banner = $row["banner"] ?? "";
 	} else {
-		die("Error: Competition with this ID was not found.");
+		echo "Error: Competition with this ID was not found.";
+		redirect("/college-competition-portal/admin/view-competition.php", 1);
 	}
 }
 ?>
@@ -277,7 +297,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         	$banner_err
         )
         	? "is-invalid"
-        	: ""; ?>" id="banner" name="banner">
+        	: ""; ?>" id="banner" name="banner" accept="image/png, image/gif, image/jpeg">
         <div class="invalid-feedback d-block"><?php echo htmlspecialchars(
         	$banner_err,
         ); ?></div>
@@ -306,6 +326,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </form>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        const form = document.querySelector("form");
         const titleInput = document.getElementById("title");
         const descInput = document.getElementById("description");
         const dateInput = document.getElementById("date");
@@ -316,54 +337,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         const dateWarn = document.getElementById("datewarn");
         const timeWarn = document.getElementById("timewarn");
 
-
         const minDate = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', minDate);
 
-
-        titleInput.addEventListener("change", function() {
+        function validateTitle() {
             const title = titleInput.value.trim();
             if (title.length < 3) {
                 titleWarn.textContent = "Title must be at least 3 characters.";
                 titleWarn.style.display = "block";
                 titleInput.classList.add("is-invalid");
+                return false;
             } else {
                 titleWarn.style.display = "none";
                 titleInput.classList.remove("is-invalid");
+                return true;
             }
-        });
+        }
 
-
-        descInput.addEventListener("change", function() {
+        function validateDescription() {
             const desc = descInput.value.trim();
             if (desc.length < 5) {
-                descWarn.textContent = "Description must be at least 10 characters.";
+                descWarn.textContent = "Description must be at least 5 characters.";
                 descWarn.style.display = "block";
                 descInput.classList.add("is-invalid");
+                return false;
             } else {
                 descWarn.style.display = "none";
                 descInput.classList.remove("is-invalid");
+                return true;
             }
-        });
+        }
 
-
-        dateInput.addEventListener("change", function() {
+        function validateDate() {
             const selectedDate = new Date(dateInput.value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            if (selectedDate < today) {
+            if (dateInput.value === "" || selectedDate < today) {
                 dateWarn.textContent = "Date cannot be in the past.";
                 dateWarn.style.display = "block";
                 dateInput.classList.add("is-invalid");
+                return false;
             } else {
                 dateWarn.style.display = "none";
                 dateInput.classList.remove("is-invalid");
+                return true;
             }
-        });
+        }
 
-
-        timeInput.addEventListener("change", function() {
+        function validateTime() {
             const selectedTime = timeInput.value;
             const minTime = "09:00";
             const maxTime = "18:00";
@@ -382,10 +404,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 timeWarn.textContent = errorMessage;
                 timeWarn.style.display = "block";
                 timeInput.classList.add("is-invalid");
+                return false;
             } else {
                 timeWarn.textContent = "";
                 timeWarn.style.display = "none";
                 timeInput.classList.remove("is-invalid");
+                return true;
+            }
+        }
+
+        function validateForm() {
+            const isTitleValid = validateTitle();
+            const isDescriptionValid = validateDescription();
+            const isDateValid = validateDate();
+            const isTimeValid = validateTime();
+            return isTitleValid && isDescriptionValid && isDateValid && isTimeValid;
+        }
+
+        titleInput.addEventListener("change", validateTitle);
+        descInput.addEventListener("change", validateDescription);
+        dateInput.addEventListener("blur", validateDate);
+        timeInput.addEventListener("change", validateTime);
+
+        form.addEventListener("submit", function(event) {
+            if (!validateForm()) {
+                event.preventDefault();
             }
         });
     });
